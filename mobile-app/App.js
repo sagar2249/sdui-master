@@ -1,112 +1,73 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, ScrollView } from 'react-native';
 
-// 1. We import the beautiful components we just made!
-import Banner from './components/Banner';
+// Import our components
 import Spacer from './components/Spacer';
+import Header from './components/Header';
+import ThemeBanner from './components/ThemeBanner';
+import SearchBar from './components/SearchBar';           // <-- ADD THIS
+import ProductCarousel from './components/ProductCarousel'; // <-- ADD THIS
 
-// --- CONFIGURATION ---
-// PUT YOUR IP ADDRESS BACK HERE (Keep the :3000/api/home)
 const SERVER_URL = 'http://192.168.2.207:3000/api/home';
 
-// 2. THE DICTIONARY (The most important part of SDUI)
-// This maps the text from the server to our actual visual files.
+// Our updated Dictionary
 const componentDictionary = {
-  'BANNER': Banner,
   'SPACER': Spacer,
+  'HEADER': Header,
+  'THEME_BANNER': ThemeBanner,
+  'SEARCH_BAR': SearchBar,             // <-- ADD THIS
+  'PRODUCT_CAROUSEL': ProductCarousel, // <-- ADD THIS
 };
 
 export default function App() {
   const [loading, setLoading] = useState(true);
-  const [components, setComponents] = useState([]);
-  const [error, setError] = useState(null);
+  const [pageData, setPageData] = useState(null); // Now holds both theme AND components
 
   useEffect(() => {
     fetch(SERVER_URL)
       .then((response) => response.json())
       .then((data) => {
-        setComponents(data.components);
+        setPageData(data); // Save the whole JSON object
         setLoading(false);
       })
       .catch((err) => {
         console.error(err);
-        setError('Could not connect to the server.');
         setLoading(false);
       });
   }, []);
 
-  if (loading) {
+  if (loading || !pageData) {
     return (
-      <View style={styles.center}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" />
-        <Text>Fetching layout from server...</Text>
       </View>
     );
   }
 
-  if (error) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>❌ Connection Error</Text>
-      </View>
-    );
-  }
-
-  // 3. THE MAGIC RENDERER
+  // The server now controls the background color of the whole app!
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>My Server-Driven UI</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: pageData.theme.backgroundColor }}>
       
-      {components.map((item, index) => {
-        // Look up the word from the server in our dictionary
+      {pageData.components.map((item, index) => {
         const ComponentToRender = componentDictionary[item.type];
 
-        // If it exists in our dictionary, draw it!
-        // The {...item.props} takes everything the server sent (like the title) and hands it to the component.
         if (ComponentToRender) {
-          return <ComponentToRender key={index} {...item.props} />;
+          // We pass down the specific props AND the overall themeConfig so components know what colors to use
+          return <ComponentToRender key={index} {...item.props} themeConfig={pageData.theme} />;
         }
 
-        // 4. THE FALLBACK
-        // If the server sends a new word we don't know yet, don't crash! Show a warning.
+        // Fallback for unknown components (like our PRODUCT_CAROUSEL for now)
         return (
           <View key={index} style={styles.unknownBox}>
-            <Text style={styles.unknownText}>Unknown Component: {item.type}</Text>
+            <Text style={styles.unknownText}>Coming Soon: {item.type}</Text>
           </View>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingTop: 60,
-    paddingHorizontal: 20,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  unknownBox: {
-    backgroundColor: '#ffebee',
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#f44336',
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  unknownText: {
-    color: '#f44336',
-    fontWeight: 'bold',
-  },
+  unknownBox: { margin: 15, padding: 10, backgroundColor: '#ddd', borderRadius: 5 },
+  unknownText: { color: '#555', fontWeight: 'bold' }
 });
