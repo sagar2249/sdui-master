@@ -3,13 +3,15 @@ const app = express();
 const port = 3000;
 
 // This is our API endpoint. It's like a drive-thru window.
+// Inside server.js
 app.get('/api/home', (req, res) => {
-  // When someone drives up to '/api/home', we hand them this JSON data.
   res.json({
     components: [
-      { type: 'BANNER', props: { title: 'Welcome to my SDUI App!' } },
-      { type: 'SPACER', props: { height: 20 } },
-      { type: 'BANNER', props: { title: 'This is controlled by the server.' } }
+      { type: 'BANNER', props: { title: '✈️ AI Travel Review Master' } },
+      { type: 'SPACER', props: { height: 10 } },
+      { type: 'BANNER', props: { title: 'New features and user-friendly updates coming soon!' } },
+      { type: 'SPACER', props: { height: 30 } },
+      { type: 'BANNER', props: { title: 'Please leave a destination review below.' } }
     ]
   });
 });
